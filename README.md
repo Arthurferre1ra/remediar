@@ -1,6 +1,6 @@
 # reMediar API
 
-Backend do reMediar, um sistema web para intermediar doacoes institucionais de medicamentos entre doadores, ONGs validadas e beneficiarios. A aplicacao evita fluxo P2P, aplica barreiras sanitarias e mantem rastreabilidade do lote do medicamento ate a instituicao responsavel.
+Um sistema web para intermediar doacoes institucionais de medicamentos entre doadores, ONGs validadas e beneficiarios. A aplicacao evita fluxo P2P, aplica barreiras sanitarias e mantem rastreabilidade do lote do medicamento ate a instituicao responsavel.
 
 ## Stack
 
