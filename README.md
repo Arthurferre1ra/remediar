@@ -100,28 +100,4 @@ Linux/macOS:
 - `DELETE /api/v1/donations/{id}`
 - `GET /api/v1/donations/institution/{institutionId}`
 
-## Perfis de Acesso
 
-- `DONOR`: cadastro de medicamentos e abertura de matches.
-- `INSTITUTION`: aceite de doacoes, consulta de doacoes destinadas e confirmacao de entrega.
-- `ADMIN`: operacoes administrativas e intervencao em fluxos.
-
-## Configuracao de Producao
-
-Use o profile `prod` com as variaveis:
-
-```text
-DATABASE_URL
-DATABASE_USERNAME
-DATABASE_PASSWORD
-```
-
-Exemplo:
-
-```bash
-SPRING_PROFILES_ACTIVE=prod ./mvnw spring-boot:run
-```
-
-## Observacoes de Seguranca
-
-A autenticacao atual e adequada apenas para desenvolvimento inicial. Para producao, substituir por JWT/OAuth2, vincular o usuario autenticado aos identificadores de doador/ONG, externalizar credenciais e integrar um servico de armazenamento seguro para as imagens dos medicamentos.
