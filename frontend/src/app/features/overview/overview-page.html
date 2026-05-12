@@ -1,0 +1,95 @@
+<section class="page-grid">
+  <div class="page-header">
+    <div>
+      <div class="eyebrow">Orquestracao</div>
+      <h2>Resumo operacional</h2>
+    </div>
+    <button type="button" class="ghost-button" (click)="refresh()" [disabled]="loading()">
+      {{ loading() ? 'Atualizando...' : 'Atualizar dados' }}
+    </button>
+  </div>
+
+  @if (error(); as errorMessage) {
+    <div class="notice error">{{ errorMessage }}</div>
+  }
+
+  <div class="stats-grid">
+    <article class="stat-card">
+      <span class="stat-label">Medicamentos disponiveis</span>
+      <strong>{{ metrics().availableMedications }}</strong>
+    </article>
+    <article class="stat-card">
+      <span class="stat-label">Medicamentos em doacao</span>
+      <strong>{{ metrics().inProgressMedications }}</strong>
+    </article>
+    <article class="stat-card">
+      <span class="stat-label">Fila aguardando aceite</span>
+      <strong>{{ metrics().queueAwaitingAcceptance }}</strong>
+    </article>
+    <article class="stat-card">
+      <span class="stat-label">Fila aguardando entrega</span>
+      <strong>{{ metrics().queueAwaitingDelivery }}</strong>
+    </article>
+  </div>
+
+  <div class="two-column-grid">
+    <section class="surface-card">
+      <div class="card-head">
+        <div>
+          <div class="eyebrow">Contexto operacional</div>
+          <h3>Parametros usados nas requisicoes</h3>
+        </div>
+      </div>
+
+      <form class="form-grid" [formGroup]="contextForm" (ngSubmit)="saveContext()">
+        <label>
+          ID do doador
+          <input type="number" formControlName="donorId" />
+        </label>
+        <label>
+          CPF do doador
+          <input type="text" formControlName="donorCpf" />
+        </label>
+        <label>
+          ID da ONG
+          <input type="number" formControlName="institutionId" />
+        </label>
+        <label>
+          Documento do ator
+          <input type="text" formControlName="actorDocument" />
+        </label>
+        <label>
+          Latitude do doador
+          <input type="number" step="0.000001" formControlName="donorLatitude" />
+        </label>
+        <label>
+          Longitude do doador
+          <input type="number" step="0.000001" formControlName="donorLongitude" />
+        </label>
+        <label>
+          Raio de busca (km)
+          <input type="number" step="0.1" formControlName="radiusKm" />
+        </label>
+        <button type="submit" class="primary-button align-end">Salvar contexto</button>
+      </form>
+    </section>
+
+    <section class="surface-card">
+      <div class="card-head">
+        <div>
+          <div class="eyebrow">Escopo funcional</div>
+          <h3>Fluxos cobertos na interface</h3>
+        </div>
+      </div>
+
+      <ul class="feature-list">
+        <li>OCR preliminar para lote e validade.</li>
+        <li>Cadastro, pesquisa, edicao e cancelamento logico de medicamentos.</li>
+        <li>Descoberta de ONGs por geolocalizacao e abertura de match.</li>
+        <li>Troca de ONG antes do aceite e cancelamento do fluxo de doacao.</li>
+        <li>Fila institucional com aceite e confirmacao de entrega.</li>
+        <li>Expiracao manual de matches vencidos no painel administrativo.</li>
+      </ul>
+    </section>
+  </div>
+</section>

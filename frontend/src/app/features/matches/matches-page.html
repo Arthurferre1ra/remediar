@@ -1,0 +1,151 @@
+<section class="page-grid">
+  <div class="page-header">
+    <div>
+      <div class="eyebrow">Doacoes</div>
+      <h2>Match logistico entre doador e instituicao</h2>
+    </div>
+  </div>
+
+  @if (message(); as banner) {
+    <div class="notice" [class.error]="banner.type === 'error'" [class.success]="banner.type === 'success'">
+      {{ banner.text }}
+    </div>
+  }
+
+  <div class="three-column-grid">
+    <section class="surface-card">
+      <div class="card-head">
+        <div>
+          <div class="eyebrow">Geolocalizacao</div>
+          <h3>ONGs proximas</h3>
+        </div>
+      </div>
+
+      <form class="form-grid single-column" [formGroup]="nearbyForm" (ngSubmit)="searchNearby()">
+        <label>
+          Latitude
+          <input type="number" step="0.000001" formControlName="latitude" />
+        </label>
+        <label>
+          Longitude
+          <input type="number" step="0.000001" formControlName="longitude" />
+        </label>
+        <label>
+          Raio de busca (km)
+          <input type="number" step="0.1" formControlName="radiusKm" />
+        </label>
+        <button type="submit" class="ghost-button">Buscar ONGs</button>
+      </form>
+
+      <div class="stack-list">
+        @for (institution of nearbyInstitutions(); track institution.id) {
+          <button type="button" class="list-item-button" (click)="selectInstitution(institution)">
+            <strong>{{ institution.legalName }}</strong>
+            <span>{{ institution.distanceKm }} km · {{ institution.cnpj }}</span>
+          </button>
+        } @empty {
+          <div class="empty-state">Nenhuma ONG consultada no momento.</div>
+        }
+      </div>
+    </section>
+
+    <section class="surface-card">
+      <div class="card-head">
+        <div>
+          <div class="eyebrow">Abertura</div>
+          <h3>Criar novo match</h3>
+        </div>
+      </div>
+
+      <form class="form-grid single-column" [formGroup]="createForm" (ngSubmit)="createDonation()">
+        <label>
+          Medicamento
+          <select formControlName="medicationId">
+            <option [value]="0">Selecione</option>
+            @for (medication of availableMedications(); track medication.id) {
+              <option [value]="medication.id">
+                #{{ medication.id }} · {{ medication.commercialName }} · lote {{ medication.lotNumber }}
+              </option>
+            }
+          </select>
+        </label>
+        <label>
+          ONG receptora
+          <input type="number" formControlName="institutionId" />
+        </label>
+        <button type="submit" class="primary-button">Criar match</button>
+      </form>
+    </section>
+
+    <section class="surface-card">
+      <div class="card-head">
+        <div>
+          <div class="eyebrow">Sessao</div>
+          <h3>Matches recentes</h3>
+        </div>
+      </div>
+
+      <div class="stack-list">
+        @for (match of recentMatches(); track match.id) {
+          <article class="list-card">
+            <strong>#{{ match.id }} · medicamento {{ match.medicationId }}</strong>
+            <span>Instituicao {{ match.institutionId }} · {{ match.status }}</span>
+            @if (match.validationCode) {
+              <span>Codigo: {{ match.validationCode }}</span>
+            }
+          </article>
+        } @empty {
+          <div class="empty-state">Os matches criados nesta sessao aparecem aqui.</div>
+        }
+      </div>
+    </section>
+  </div>
+
+  <div class="two-column-grid align-start">
+    <section class="surface-card">
+      <div class="card-head">
+        <div>
+          <div class="eyebrow">Reencaminhamento</div>
+          <h3>Alterar ONG antes do aceite</h3>
+        </div>
+      </div>
+
+      <form class="form-grid" [formGroup]="changeForm" (ngSubmit)="changeInstitution()">
+        <label>
+          ID da doacao
+          <input type="number" formControlName="donationId" />
+        </label>
+        <label>
+          Nova ONG
+          <input type="number" formControlName="institutionId" />
+        </label>
+        <label>
+          Latitude do doador
+          <input type="number" step="0.000001" formControlName="donorLatitude" />
+        </label>
+        <label>
+          Longitude do doador
+          <input type="number" step="0.000001" formControlName="donorLongitude" />
+        </label>
+        <button type="submit" class="ghost-button span-2">Atualizar instituicao do match</button>
+      </form>
+    </section>
+
+    <section class="surface-card">
+      <div class="card-head">
+        <div>
+          <div class="eyebrow">Cancelamento</div>
+          <h3>Cancelar fluxo de doacao</h3>
+        </div>
+      </div>
+
+      <form class="form-grid single-column" [formGroup]="cancelForm" (ngSubmit)="cancelDonation()">
+        <label>
+          ID da doacao
+          <input type="number" formControlName="donationId" />
+        </label>
+        <button type="submit" class="ghost-button danger">Cancelar match</button>
+      </form>
+    </section>
+  </div>
+</section>

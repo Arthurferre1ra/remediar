@@ -1,0 +1,47 @@
+<section class="page-grid">
+  <div class="page-header">
+    <div>
+      <div class="eyebrow">Administracao</div>
+      <h2>Operacoes de manutencao do fluxo</h2>
+    </div>
+  </div>
+
+  <div class="two-column-grid">
+    <section class="surface-card">
+      <div class="card-head">
+        <div>
+          <div class="eyebrow">Prazo</div>
+          <h3>Expirar matches vencidos</h3>
+        </div>
+      </div>
+
+      <p class="muted">
+        Aciona o endpoint administrativo que varre doacoes em atraso e devolve os itens ao estado
+        disponivel quando o prazo de entrega ja foi ultrapassado.
+      </p>
+
+      <button type="button" class="primary-button" (click)="expireOverdue()" [disabled]="running()">
+        {{ running() ? 'Executando...' : 'Processar expiracoes' }}
+      </button>
+
+      @if (result(); as output) {
+        <div class="notice success">{{ output }}</div>
+      }
+    </section>
+
+    <section class="surface-card">
+      <div class="card-head">
+        <div>
+          <div class="eyebrow">Governanca</div>
+          <h3>Escopo administrativo atual</h3>
+        </div>
+      </div>
+
+      <ul class="feature-list">
+        <li>Acesso integral aos fluxos de medicamentos e doacoes.</li>
+        <li>Execucao manual da rotina de expiracao.</li>
+        <li>Uso do mesmo backend protegido por JWT e autorizacao por roles.</li>
+      </ul>
+    </section>
+  </div>
+</section>

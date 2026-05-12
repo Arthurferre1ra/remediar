@@ -1,0 +1,93 @@
+@if (!auth.isAuthenticated()) {
+  <main class="login-shell">
+    <section class="login-panel">
+      <div class="eyebrow">reMediar</div>
+      <h1>Hub de doacao institucional de medicamentos</h1>
+      <p class="lede">
+        A interface centraliza triagem, cadastro, match com ONG e confirmacao de entrega
+        dentro das regras sanitarias implementadas no backend.
+      </p>
+
+      <div class="demo-presets">
+        @for (demo of demos; track demo.username) {
+          <button
+            type="button"
+            class="preset-button"
+            (click)="applyDemoCredentials(demo.username, demo.password, demo.role)">
+            {{ demo.label }}
+          </button>
+        }
+      </div>
+
+      <form class="login-form" [formGroup]="loginForm" (ngSubmit)="login()">
+        <label>
+          Usuario
+          <input type="text" formControlName="username" />
+        </label>
+
+        <label>
+          Senha
+          <input type="password" formControlName="password" />
+        </label>
+
+        <label>
+          Perfil operacional
+          <select formControlName="role">
+            <option value="DONOR">Doador</option>
+            <option value="INSTITUTION">ONG / Instituicao</option>
+            <option value="ADMIN">Administrador</option>
+          </select>
+        </label>
+
+        @if (loginState().error; as error) {
+          <div class="inline-alert error">{{ error }}</div>
+        }
+
+        <button type="submit" class="primary-button" [disabled]="loginState().loading">
+          {{ loginState().loading ? 'Validando acesso...' : 'Entrar na operacao' }}
+        </button>
+      </form>
+    </section>
+  </main>
+} @else {
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-block">
+        <div class="eyebrow">reMediar</div>
+        <h2>Operacao assistencial</h2>
+        <p>Fluxo institucional com rastreabilidade total do lote.</p>
+      </div>
+
+      <nav class="nav-list">
+        @for (item of navigationItems(); track item.path) {
+          <a routerLink="{{ item.path }}" routerLinkActive="active-link" class="nav-link">
+            <span class="material-symbols-outlined">{{ item.icon }}</span>
+            <span>{{ item.label }}</span>
+          </a>
+        }
+      </nav>
+
+      <div class="sidebar-card">
+        <div class="sidebar-title">Sessao</div>
+        <div>{{ auth.username() }}</div>
+        <div class="muted">{{ currentRoleLabel() }}</div>
+      </div>
+    </aside>
+
+    <main class="content-shell">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">Back-end integrado</div>
+          <h1>{{ currentRoleLabel() }}</h1>
+        </div>
+
+        <div class="topbar-actions">
+          <span class="status-pill positive">API protegida por JWT</span>
+          <button type="button" class="ghost-button" (click)="logout()">Encerrar sessao</button>
+        </div>
+      </header>
+
+      <router-outlet />
+    </main>
+  </div>
+}

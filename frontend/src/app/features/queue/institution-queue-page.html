@@ -1,0 +1,107 @@
+<section class="page-grid">
+  <div class="page-header">
+    <div>
+      <div class="eyebrow">Fila institucional</div>
+      <h2>Doacoes destinadas a ONG e confirmacao de entrega</h2>
+    </div>
+    <button type="button" class="ghost-button" (click)="search()" [disabled]="loading()">
+      {{ loading() ? 'Carregando...' : 'Atualizar fila' }}
+    </button>
+  </div>
+
+  @if (message(); as banner) {
+    <div class="notice" [class.error]="banner.type === 'error'" [class.success]="banner.type === 'success'">
+      {{ banner.text }}
+    </div>
+  }
+
+  <section class="surface-card">
+    <div class="card-head">
+      <div>
+        <div class="eyebrow">Pesquisa</div>
+        <h3>Consulta por instituicao</h3>
+      </div>
+    </div>
+
+    <form class="form-grid compact" [formGroup]="searchForm" (ngSubmit)="search()">
+      <label>
+        ID da ONG
+        <input type="number" formControlName="institutionId" />
+      </label>
+      <label>
+        Nome do medicamento
+        <input type="text" formControlName="medicationName" />
+      </label>
+      <label>
+        Lote
+        <input type="text" formControlName="lotNumber" />
+      </label>
+      <label>
+        Entrega prevista
+        <input type="date" formControlName="deliveryDate" />
+      </label>
+      <button type="submit" class="ghost-button align-end">Pesquisar doacoes</button>
+    </form>
+  </section>
+
+  <div class="two-column-grid align-start">
+    <section class="surface-card">
+      <div class="card-head">
+        <div>
+          <div class="eyebrow">Fila</div>
+          <h3>Doacoes encontradas</h3>
+        </div>
+      </div>
+
+      <div class="stack-list">
+        @for (match of queue(); track match.id) {
+          <article class="list-card">
+            <strong>#{{ match.id }} · medicamento {{ match.medicationId }}</strong>
+            <span>Status: {{ match.status }}</span>
+            <span>Prazo: {{ match.deliveryDeadline || 'Nao definido' }}</span>
+            <span>Codigo: {{ match.validationCode || 'Sera gerado no aceite' }}</span>
+            <div class="inline-actions">
+              <button
+                type="button"
+                class="ghost-button"
+                [disabled]="match.status !== 'AWAITING_ACCEPTANCE'"
+                (click)="acceptDonation(match.id)">
+                Aceitar
+              </button>
+              <button
+                type="button"
+                class="ghost-button"
+                [disabled]="match.status !== 'AWAITING_DELIVERY'"
+                (click)="openDelivery(match)">
+                Confirmar entrega
+              </button>
+            </div>
+          </article>
+        } @empty {
+          <div class="empty-state">Nenhuma doacao vinculada aos filtros informados.</div>
+        }
+      </div>
+    </section>
+
+    <section class="surface-card">
+      <div class="card-head">
+        <div>
+          <div class="eyebrow">Baixa</div>
+          <h3>Confirmacao de entrega fisica</h3>
+        </div>
+      </div>
+
+      <form class="form-grid single-column" [formGroup]="deliveryForm" (ngSubmit)="confirmDelivery()">
+        <label>
+          ID selecionado
+          <input type="text" [value]="selectedDeliveryId() || ''" disabled />
+        </label>
+        <label>
+          Codigo de validacao
+          <input type="text" formControlName="validationCode" />
+        </label>
+        <button type="submit" class="primary-button">Confirmar entrega</button>
+      </form>
+    </section>
+  </div>
+</section>

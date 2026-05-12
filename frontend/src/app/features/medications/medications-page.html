@@ -1,0 +1,235 @@
+<section class="page-grid">
+  <div class="page-header">
+    <div>
+      <div class="eyebrow">Medicamentos</div>
+      <h2>Cadastro, triagem e consulta do estoque doado</h2>
+    </div>
+    <button type="button" class="ghost-button" (click)="search()" [disabled]="loading()">
+      {{ loading() ? 'Buscando...' : 'Atualizar lista' }}
+    </button>
+  </div>
+
+  @if (pageMessage(); as message) {
+    <div class="notice" [class.error]="message.type === 'error'" [class.success]="message.type === 'success'">
+      {{ message.text }}
+    </div>
+  }
+
+  <div class="two-column-grid align-start">
+    <section class="surface-card">
+      <div class="card-head">
+        <div>
+          <div class="eyebrow">OCR</div>
+          <h3>Extracao preliminar de lote e validade</h3>
+        </div>
+      </div>
+
+      <form class="form-grid single-column" [formGroup]="ocrForm" (ngSubmit)="previewOcr()">
+        <label>
+          Texto bruto reconhecido
+          <textarea rows="5" formControlName="rawOcrText"></textarea>
+        </label>
+        <button type="submit" class="ghost-button align-start">Executar preview OCR</button>
+      </form>
+
+      @if (ocrResult(); as preview) {
+        <div class="result-panel">
+          <div><strong>Lote:</strong> {{ preview.lotNumber || 'Nao identificado' }}</div>
+          <div><strong>Validade:</strong> {{ preview.expirationDate || 'Nao identificada' }}</div>
+        </div>
+      }
+    </section>
+
+    @if (canMutateMedications()) {
+      <section class="surface-card">
+        <div class="card-head">
+          <div>
+            <div class="eyebrow">Cadastro</div>
+            <h3>Novo medicamento</h3>
+          </div>
+        </div>
+
+        <form class="form-grid" [formGroup]="medicationForm" (ngSubmit)="createMedication()">
+          <label>
+            Nome comercial
+            <input type="text" formControlName="commercialName" />
+          </label>
+          <label>
+            Principio ativo
+            <input type="text" formControlName="activeIngredient" />
+          </label>
+          <label>
+            Dosagem / concentracao
+            <input type="text" formControlName="concentration" />
+          </label>
+          <label>
+            Fabricante
+            <input type="text" formControlName="manufacturer" />
+          </label>
+          <label>
+            Lote
+            <input type="text" formControlName="lotNumber" />
+          </label>
+          <label>
+            Validade
+            <input type="date" formControlName="expirationDate" />
+          </label>
+          <label>
+            Quantidade
+            <input type="number" formControlName="quantityAvailable" />
+          </label>
+          <label>
+            Tipo de medicamento
+            <select formControlName="medicationTypeCode">
+              @for (option of medicationTypeOptions; track option.code) {
+                <option [value]="option.code">{{ option.label }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            URL foto frontal
+            <input type="text" formControlName="frontPhotoUrl" />
+          </label>
+          <label>
+            URL foto blister/cartela
+            <input type="text" formControlName="blisterPhotoUrl" />
+          </label>
+          <label class="checkbox-field span-2">
+            <input type="checkbox" formControlName="storageDeclaration" />
+            <span>Declaro que o medicamento nao foi exposto a calor excessivo ou umidade.</span>
+          </label>
+          <button type="submit" class="primary-button span-2">Cadastrar medicamento</button>
+        </form>
+      </section>
+    }
+  </div>
+
+  <section class="surface-card">
+    <div class="card-head">
+      <div>
+        <div class="eyebrow">Consulta</div>
+        <h3>Filtro de medicamentos</h3>
+      </div>
+    </div>
+
+    <form class="form-grid compact" [formGroup]="searchForm" (ngSubmit)="search()">
+      <label>
+        Nome
+        <input type="text" formControlName="name" />
+      </label>
+      <label>
+        Principio ativo
+        <input type="text" formControlName="activeIngredient" />
+      </label>
+      <label>
+        Lote
+        <input type="text" formControlName="lotNumber" />
+      </label>
+      <label>
+        Validade ate
+        <input type="date" formControlName="expiresBefore" />
+      </label>
+      <button type="submit" class="ghost-button align-end">Pesquisar</button>
+    </form>
+  </section>
+
+  <section class="surface-card">
+    <div class="card-head">
+      <div>
+        <div class="eyebrow">Resultado</div>
+        <h3>Medicamentos cadastrados</h3>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Medicamento</th>
+            <th>Lote</th>
+            <th>Validade</th>
+            <th>Qtd</th>
+            <th>Status</th>
+            <th>Fotos</th>
+            @if (canMutateMedications()) {
+              <th>Acoes</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (medication of medications(); track medication.id) {
+            <tr>
+              <td>#{{ medication.id }}</td>
+              <td>
+                <strong>{{ medication.commercialName }}</strong>
+                <div class="muted">{{ medication.activeIngredient }} · {{ medication.concentration }}</div>
+              </td>
+              <td>{{ medication.lotNumber }}</td>
+              <td>{{ medication.expirationDate }}</td>
+              <td>{{ medication.quantityAvailable }}</td>
+              <td><span class="status-pill neutral">{{ medication.status }}</span></td>
+              <td>
+                <div class="photo-links">
+                  <a [href]="medication.frontPhotoUrl" target="_blank" rel="noreferrer">Caixa</a>
+                  <a [href]="medication.blisterPhotoUrl" target="_blank" rel="noreferrer">Blister</a>
+                </div>
+              </td>
+              @if (canMutateMedications()) {
+                <td>
+                  <div class="inline-actions">
+                    <button
+                      type="button"
+                      class="ghost-button"
+                      (click)="beginEdit(medication)"
+                      [disabled]="medication.status !== 'AVAILABLE'">
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      class="ghost-button danger"
+                      (click)="cancelMedication(medication.id)"
+                      [disabled]="medication.status === 'DELIVERED'">
+                      Cancelar
+                    </button>
+                  </div>
+                </td>
+              }
+            </tr>
+
+            @if (editingId() === medication.id) {
+              <tr class="edit-row">
+                <td [attr.colspan]="canMutateMedications() ? 8 : 7">
+                  <form class="form-grid compact" [formGroup]="editForm" (ngSubmit)="saveEdit()">
+                    <label>
+                      Quantidade
+                      <input type="number" formControlName="quantityAvailable" />
+                    </label>
+                    <label>
+                      URL foto frontal
+                      <input type="text" formControlName="frontPhotoUrl" />
+                    </label>
+                    <label>
+                      URL foto blister
+                      <input type="text" formControlName="blisterPhotoUrl" />
+                    </label>
+                    <div class="inline-actions align-end">
+                      <button type="submit" class="primary-button">Salvar</button>
+                      <button type="button" class="ghost-button" (click)="cancelEdit()">Fechar</button>
+                    </div>
+                  </form>
+                </td>
+              </tr>
+            }
+          } @empty {
+            <tr>
+              <td [attr.colspan]="canMutateMedications() ? 8 : 7" class="empty-cell">
+                Nenhum medicamento encontrado com os filtros atuais.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>

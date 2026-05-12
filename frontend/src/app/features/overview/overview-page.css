@@ -1,0 +1,6 @@
+.feature-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted-text);
+  line-height: 1.7;
+}
