@@ -6,6 +6,8 @@ import jakarta.validation.ConstraintViolationException;
 import java.net.URI;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -26,6 +28,16 @@ public class ApiExceptionHandler {
     @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class})
     public ProblemDetail handleValidation(Exception exception) {
         return problem(HttpStatus.BAD_REQUEST, "Requisicao invalida", exception.getMessage());
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ProblemDetail handleBadCredentials() {
+        return problem(HttpStatus.UNAUTHORIZED, "Credenciais invalidas", "Usuario ou senha invalidos.");
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ProblemDetail handleAccessDenied() {
+        return problem(HttpStatus.FORBIDDEN, "Acesso negado", "Usuario autenticado sem permissao para este recurso.");
     }
 
     private ProblemDetail problem(HttpStatus status, String title, String detail) {

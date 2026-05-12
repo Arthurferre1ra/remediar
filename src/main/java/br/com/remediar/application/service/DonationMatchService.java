@@ -1,5 +1,8 @@
 package br.com.remediar.application.service;
 
+import br.com.remediar.application.dto.DonationDeliveryConfirmationCommand;
+import br.com.remediar.application.dto.DonationInstitutionChangeCommand;
+import br.com.remediar.application.dto.DonationMatchCreateCommand;
 import br.com.remediar.application.ports.ValidationCodeGenerator;
 import br.com.remediar.common.BusinessException;
 import br.com.remediar.common.NotFoundException;
@@ -10,7 +13,6 @@ import br.com.remediar.domain.model.Medication;
 import br.com.remediar.domain.repository.DonationMatchRepository;
 import br.com.remediar.domain.repository.InstitutionRepository;
 import br.com.remediar.domain.repository.MedicationRepository;
-import br.com.remediar.web.dto.DonationMatchCreateRequest;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -58,12 +60,12 @@ public class DonationMatchService {
     }
 
     @Transactional
-    public DonationMatch create(DonationMatchCreateRequest request) {
-        Medication medication = medicationRepository.findById(request.medicationId())
+    public DonationMatch create(DonationMatchCreateCommand command) {
+        Medication medication = medicationRepository.findById(command.medicationId())
                 .orElseThrow(() -> new NotFoundException("Medicamento nao encontrado."));
         medication.ensureAvailable();
 
-        if (!medication.getDonorId().equals(request.donorId())) {
+        if (!medication.getDonorId().equals(command.donorId())) {
             throw new BusinessException("Medicamento nao pertence ao doador informado.");
         }
         if (donationMatchRepository.existsByMedicationIdAndStatusIn(
@@ -73,18 +75,18 @@ public class DonationMatchService {
             throw new BusinessException("Medicamento ja possui match em aberto.");
         }
 
-        Institution institution = findEligibleInstitution(request.institutionId());
-        BigDecimal radiusKm = request.radiusKm() == null ? defaultRadiusKm : request.radiusKm();
-        BigDecimal distanceKm = distanceFromDonor(request.donorLatitude(), request.donorLongitude(), institution);
+        Institution institution = findEligibleInstitution(command.institutionId());
+        BigDecimal radiusKm = command.radiusKm() == null ? defaultRadiusKm : command.radiusKm();
+        BigDecimal distanceKm = distanceFromDonor(command.donorLatitude(), command.donorLongitude(), institution);
         ensureInsideRadius(distanceKm, radiusKm);
 
         DonationMatch donationMatch = donationMatchRepository.save(new DonationMatch(
                 medication,
-                request.donorId(),
+                command.donorId(),
                 institution,
                 radiusKm,
-                request.donorLatitude(),
-                request.donorLongitude(),
+                command.donorLatitude(),
+                command.donorLongitude(),
                 distanceKm
         ));
 
@@ -99,13 +101,13 @@ public class DonationMatchService {
     }
 
     @Transactional
-    public DonationMatch changeInstitution(Long donationId, Long institutionId, BigDecimal donorLatitude, BigDecimal donorLongitude, String actorDocument) {
+    public DonationMatch changeInstitution(Long donationId, DonationInstitutionChangeCommand command) {
         DonationMatch donationMatch = findDetailed(donationId);
-        Institution institution = findEligibleInstitution(institutionId);
-        BigDecimal distanceKm = distanceFromDonor(donorLatitude, donorLongitude, institution);
+        Institution institution = findEligibleInstitution(command.institutionId());
+        BigDecimal distanceKm = distanceFromDonor(command.donorLatitude(), command.donorLongitude(), institution);
         ensureInsideRadius(distanceKm, donationMatch.getRadiusKm());
         donationMatch.changeInstitution(institution, distanceKm);
-        auditService.record("DonationMatch", donationId, "INSTITUTION_CHANGED", actorDocument, "ONG alterada antes do aceite.");
+        auditService.record("DonationMatch", donationId, "INSTITUTION_CHANGED", command.actorDocument(), "ONG alterada antes do aceite.");
         return donationMatch;
     }
 
@@ -120,10 +122,10 @@ public class DonationMatchService {
     }
 
     @Transactional
-    public DonationMatch confirmDelivery(Long donationId, String validationCode, String actorDocument) {
+    public DonationMatch confirmDelivery(Long donationId, DonationDeliveryConfirmationCommand command) {
         DonationMatch donationMatch = findDetailed(donationId);
-        donationMatch.complete(validationCode);
-        auditService.record("DonationMatch", donationId, "DELIVERY_CONFIRMED", actorDocument, "Entrega fisica confirmada por QR/codigo.");
+        donationMatch.complete(command.validationCode());
+        auditService.record("DonationMatch", donationId, "DELIVERY_CONFIRMED", command.actorDocument(), "Entrega fisica confirmada por QR/codigo.");
         return donationMatch;
     }
 

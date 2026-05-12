@@ -31,6 +31,10 @@ management:
         enabled: true
 
 remediar:
+  security:
+    jwt:
+      secret: ${REMEDIAR_JWT_SECRET:dev-remediar-secret-change-me-please-32-bytes}
+      access-token-ttl: PT8H
   match:
     default-radius-km: 10
   donation:

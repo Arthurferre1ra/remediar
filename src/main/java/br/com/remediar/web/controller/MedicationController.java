@@ -1,18 +1,19 @@
 package br.com.remediar.web.controller;
 
 import br.com.remediar.application.service.MedicationService;
+import br.com.remediar.infrastructure.security.UserPrincipal;
 import br.com.remediar.web.dto.MedicationCreateRequest;
 import br.com.remediar.web.dto.MedicationOcrPreviewRequest;
 import br.com.remediar.web.dto.MedicationOcrPreviewResponse;
 import br.com.remediar.web.dto.MedicationResponse;
 import br.com.remediar.web.dto.MedicationUpdateRequest;
 import jakarta.validation.Valid;
-import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -44,7 +45,7 @@ public class MedicationController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('DONOR', 'ADMIN')")
     public MedicationResponse create(@Valid @RequestBody MedicationCreateRequest request) {
-        return MedicationResponse.from(medicationService.create(request));
+        return MedicationResponse.from(medicationService.create(request.toCommand()));
     }
 
     @PatchMapping("/{id}")
@@ -52,16 +53,16 @@ public class MedicationController {
     public MedicationResponse update(
             @PathVariable Long id,
             @Valid @RequestBody MedicationUpdateRequest request,
-            Principal principal
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        return MedicationResponse.from(medicationService.updateAvailableFields(id, request, principal.getName()));
+        return MedicationResponse.from(medicationService.updateAvailableFields(id, request.toCommand(), principal.actorDocument()));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAnyRole('DONOR', 'ADMIN')")
-    public void cancel(@PathVariable Long id, Principal principal) {
-        medicationService.cancel(id, principal.getName());
+    public void cancel(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal) {
+        medicationService.cancel(id, principal.actorDocument());
     }
 
     @GetMapping

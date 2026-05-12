@@ -1,5 +1,7 @@
 package br.com.remediar.application.service;
 
+import br.com.remediar.application.dto.MedicationCreateCommand;
+import br.com.remediar.application.dto.MedicationUpdateCommand;
 import br.com.remediar.application.ports.OcrMedicationDataExtractor;
 import br.com.remediar.common.BusinessException;
 import br.com.remediar.common.NotFoundException;
@@ -8,8 +10,6 @@ import br.com.remediar.domain.model.Medication;
 import br.com.remediar.domain.model.MedicationBlacklistItem;
 import br.com.remediar.domain.repository.MedicationBlacklistRepository;
 import br.com.remediar.domain.repository.MedicationRepository;
-import br.com.remediar.web.dto.MedicationCreateRequest;
-import br.com.remediar.web.dto.MedicationUpdateRequest;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
@@ -42,24 +42,24 @@ public class MedicationService {
     }
 
     @Transactional
-    public Medication create(MedicationCreateRequest request) {
-        MedicationType medicationType = MedicationType.fromCode(request.medicationTypeCode());
-        ensureSanitaryAcceptance(request, medicationType);
+    public Medication create(MedicationCreateCommand command) {
+        MedicationType medicationType = MedicationType.fromCode(command.medicationTypeCode());
+        ensureSanitaryAcceptance(command, medicationType);
 
         Medication medication = new Medication(
-                request.donorId(),
-                request.donorCpf(),
-                request.commercialName(),
-                request.activeIngredient(),
-                request.concentration(),
-                request.manufacturer(),
-                request.lotNumber(),
-                request.expirationDate(),
-                request.quantityAvailable(),
+                command.donorId(),
+                command.donorCpf(),
+                command.commercialName(),
+                command.activeIngredient(),
+                command.concentration(),
+                command.manufacturer(),
+                command.lotNumber(),
+                command.expirationDate(),
+                command.quantityAvailable(),
                 medicationType,
-                request.frontPhotoUrl(),
-                request.blisterPhotoUrl(),
-                request.storageDeclaration()
+                command.frontPhotoUrl(),
+                command.blisterPhotoUrl(),
+                command.storageDeclaration()
         );
 
         Medication saved = medicationRepository.save(medication);
@@ -74,9 +74,9 @@ public class MedicationService {
     }
 
     @Transactional
-    public Medication updateAvailableFields(Long id, MedicationUpdateRequest request, String actorDocument) {
+    public Medication updateAvailableFields(Long id, MedicationUpdateCommand command, String actorDocument) {
         Medication medication = findMedication(id);
-        medication.updateAvailableData(request.quantityAvailable(), request.frontPhotoUrl(), request.blisterPhotoUrl());
+        medication.updateAvailableData(command.quantityAvailable(), command.frontPhotoUrl(), command.blisterPhotoUrl());
         auditService.record("Medication", id, "UPDATED_AVAILABLE_FIELDS", actorDocument, "Quantidade/fotos atualizadas.");
         return medication;
     }
@@ -98,21 +98,21 @@ public class MedicationService {
         return ocrExtractor.extract(rawOcrText);
     }
 
-    private void ensureSanitaryAcceptance(MedicationCreateRequest request, MedicationType medicationType) {
-        if (!request.storageDeclaration()) {
+    private void ensureSanitaryAcceptance(MedicationCreateCommand command, MedicationType medicationType) {
+        if (!command.storageDeclaration()) {
             throw new BusinessException("Declaracao de armazenamento e obrigatoria.");
         }
-        if (request.frontPhotoUrl().isBlank() || request.blisterPhotoUrl().isBlank()) {
+        if (command.frontPhotoUrl().isBlank() || command.blisterPhotoUrl().isBlank()) {
             throw new BusinessException("Fotos da embalagem frontal e do blister/cartela sao obrigatorias.");
         }
         LocalDate minimumExpiration = LocalDate.now(clock).plusDays(MINIMUM_VALIDITY_DAYS);
-        if (request.expirationDate().isBefore(minimumExpiration)) {
+        if (command.expirationDate().isBefore(minimumExpiration)) {
             throw new BusinessException("Medicamento deve ter validade minima de 45 dias.");
         }
         blacklistRepository.findBlockingItems(
                 medicationType.getCode(),
-                request.activeIngredient(),
-                request.commercialName()
+                command.activeIngredient(),
+                command.commercialName()
         ).stream().findFirst().ifPresent(this::rejectBlacklistedMedication);
     }
 

@@ -1,5 +1,6 @@
 package br.com.remediar.web.dto;
 
+import br.com.remediar.application.dto.MedicationCreateCommand;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -22,4 +23,21 @@ public record MedicationCreateRequest(
         @NotBlank String blisterPhotoUrl,
         boolean storageDeclaration
 ) {
+    public MedicationCreateCommand toCommand() {
+        return new MedicationCreateCommand(
+                donorId,
+                donorCpf,
+                commercialName,
+                activeIngredient,
+                concentration,
+                manufacturer,
+                lotNumber,
+                expirationDate,
+                quantityAvailable,
+                medicationTypeCode,
+                frontPhotoUrl,
+                blisterPhotoUrl,
+                storageDeclaration
+        );
+    }
 }

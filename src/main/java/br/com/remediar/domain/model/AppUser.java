@@ -22,6 +22,12 @@ public class AppUser {
     @Column(nullable = false, length = 160)
     private String name;
 
+    @Column(nullable = false, length = 80, unique = true)
+    private String username;
+
+    @Column(name = "password_hash", nullable = false, length = 200)
+    private String passwordHash;
+
     @Column(length = 14, unique = true)
     private String cpf;
 
@@ -49,6 +55,14 @@ public class AppUser {
         return name;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
     public String getCpf() {
         return cpf;
     }
@@ -63,5 +77,9 @@ public class AppUser {
 
     public boolean isVerified() {
         return verified;
+    }
+
+    public String getActorDocument() {
+        return cpf != null ? cpf : cnpj;
     }
 }

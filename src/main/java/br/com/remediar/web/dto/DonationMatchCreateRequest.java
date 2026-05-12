@@ -1,5 +1,6 @@
 package br.com.remediar.web.dto;
 
+import br.com.remediar.application.dto.DonationMatchCreateCommand;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
@@ -14,4 +15,14 @@ public record DonationMatchCreateRequest(
         @NotNull @DecimalMin("-180.0") @DecimalMax("180.0") BigDecimal donorLongitude,
         @Positive BigDecimal radiusKm
 ) {
+    public DonationMatchCreateCommand toCommand() {
+        return new DonationMatchCreateCommand(
+                medicationId,
+                donorId,
+                institutionId,
+                donorLatitude,
+                donorLongitude,
+                radiusKm
+        );
+    }
 }

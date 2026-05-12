@@ -1,17 +1,18 @@
 package br.com.remediar.web.controller;
 
 import br.com.remediar.application.service.DonationMatchService;
+import br.com.remediar.infrastructure.security.UserPrincipal;
 import br.com.remediar.web.dto.DonationDeliveryConfirmationRequest;
 import br.com.remediar.web.dto.DonationInstitutionChangeRequest;
 import br.com.remediar.web.dto.DonationMatchCreateRequest;
 import br.com.remediar.web.dto.DonationMatchResponse;
 import jakarta.validation.Valid;
-import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -37,44 +38,40 @@ public class DonationMatchController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('DONOR', 'ADMIN')")
     public DonationMatchResponse create(@Valid @RequestBody DonationMatchCreateRequest request) {
-        return DonationMatchResponse.from(donationMatchService.create(request));
+        return DonationMatchResponse.from(donationMatchService.create(request.toCommand()));
     }
 
     @PatchMapping("/{id}/institution")
     @PreAuthorize("hasAnyRole('DONOR', 'ADMIN')")
     public DonationMatchResponse changeInstitution(
             @PathVariable Long id,
-            @Valid @RequestBody DonationInstitutionChangeRequest request
+            @Valid @RequestBody DonationInstitutionChangeRequest request,
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        return DonationMatchResponse.from(donationMatchService.changeInstitution(
-                id,
-                request.institutionId(),
-                request.donorLatitude(),
-                request.donorLongitude(),
-                request.actorDocument()
-        ));
+        return DonationMatchResponse.from(donationMatchService.changeInstitution(id, request.toCommand(principal.actorDocument())));
     }
 
     @PostMapping("/{id}/accept")
     @PreAuthorize("hasAnyRole('INSTITUTION', 'ADMIN')")
-    public DonationMatchResponse accept(@PathVariable Long id, Principal principal) {
-        return DonationMatchResponse.from(donationMatchService.accept(id, principal.getName()));
+    public DonationMatchResponse accept(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal) {
+        return DonationMatchResponse.from(donationMatchService.accept(id, principal.actorDocument()));
     }
 
     @PostMapping("/{id}/confirm-delivery")
     @PreAuthorize("hasAnyRole('INSTITUTION', 'ADMIN')")
     public DonationMatchResponse confirmDelivery(
             @PathVariable Long id,
-            @Valid @RequestBody DonationDeliveryConfirmationRequest request
+            @Valid @RequestBody DonationDeliveryConfirmationRequest request,
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        return DonationMatchResponse.from(donationMatchService.confirmDelivery(id, request.validationCode(), request.actorDocument()));
+        return DonationMatchResponse.from(donationMatchService.confirmDelivery(id, request.toCommand(principal.actorDocument())));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAnyRole('DONOR', 'ADMIN')")
-    public void cancel(@PathVariable Long id, Principal principal) {
-        donationMatchService.cancelOrExpire(id, principal.getName());
+    public void cancel(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal) {
+        donationMatchService.cancelOrExpire(id, principal.actorDocument());
     }
 
     @GetMapping("/institution/{institutionId}")
