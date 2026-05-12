@@ -1,18 +1,18 @@
 # reMediar API
 
-Backend do reMediar, um sistema web para intermediar doacoes institucionais de medicamentos entre doadores, ONGs validadas e beneficiarios. A aplicacao evita fluxo P2P, aplica barreiras sanitarias e mantem rastreabilidade do lote do medicamento ate a instituicao responsavel.
+Aplicacao full stack do reMediar para intermediar doacoes institucionais de medicamentos entre doadores, ONGs validadas e beneficiarios. O sistema evita fluxo P2P, aplica barreiras sanitarias e mantem rastreabilidade do lote do medicamento ate a instituicao responsavel.
 
 ## Stack
 
 - Java 17+
 - Spring Boot 4
+- Angular 20
 - Spring Web MVC
 - Spring Data JPA
 - Spring Security com RBAC
 - Bean Validation
 - Flyway
 - H2 para desenvolvimento local
-- PostgreSQL para producao
 - Maven Wrapper
 
 ## Arquitetura
@@ -24,6 +24,7 @@ O projeto segue separacao por responsabilidade:
 - `infrastructure`: configuracoes, seguranca, OCR simplificado, geracao de codigo e scheduler.
 - `web`: controllers REST, DTOs e tratamento padronizado de erros.
 - `resources/db/migration`: migracoes versionadas do banco.
+- `frontend`: interface Angular standalone integrada aos endpoints REST.
 
 ## Funcionalidades Implementadas
 
@@ -39,6 +40,7 @@ O projeto segue separacao por responsabilidade:
 - Confirmacao de entrega fisica por codigo de validacao.
 - Expiracao automatica de matches vencidos apos 5 dias uteis.
 - Auditoria append-only para rastreabilidade.
+- Interface Angular minimalista para login, cadastro, consulta, match, fila institucional e administracao.
 
 ## Execucao Local
 
@@ -46,14 +48,15 @@ Requisitos:
 
 - JDK 17 ou superior instalado e configurado no `JAVA_HOME`.
 - Acesso a internet na primeira execucao para download das dependencias Maven.
+- Node.js 22+ e npm para rodar o frontend Angular localmente.
 
-Windows:
+Backend no Windows:
 
 ```powershell
 .\mvnw.cmd spring-boot:run
 ```
 
-Linux/macOS:
+Backend no Linux/macOS:
 
 ```bash
 ./mvnw spring-boot:run
@@ -62,7 +65,7 @@ Linux/macOS:
 A API sobe por padrao em:
 
 ```text
-http://localhost:8080
+http://localhost:8081
 ```
 
 Healthcheck:
@@ -70,6 +73,16 @@ Healthcheck:
 ```text
 GET /actuator/health
 ```
+
+Frontend local:
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+O frontend usa proxy local para a API e sobe em `http://localhost:4200`.
 
 ## Testes
 
@@ -83,6 +96,12 @@ Linux/macOS:
 
 ```bash
 ./mvnw test
+```
+
+Testes do frontend:
+
+```bash
+cd frontend && npm test
 ```
 
 ## Endpoints Principais
@@ -106,22 +125,6 @@ Linux/macOS:
 - `INSTITUTION`: aceite de doacoes, consulta de doacoes destinadas e confirmacao de entrega.
 - `ADMIN`: operacoes administrativas e intervencao em fluxos.
 
-## Configuracao de Producao
-
-Use o profile `prod` com as variaveis:
-
-```text
-DATABASE_URL
-DATABASE_USERNAME
-DATABASE_PASSWORD
-```
-
-Exemplo:
-
-```bash
-SPRING_PROFILES_ACTIVE=prod ./mvnw spring-boot:run
-```
-
 ## Observacoes de Seguranca
 
-A autenticacao atual e adequada apenas para desenvolvimento inicial. Para producao, substituir por JWT/OAuth2, vincular o usuario autenticado aos identificadores de doador/ONG, externalizar credenciais e integrar um servico de armazenamento seguro para as imagens dos medicamentos.
+A API usa login em `/api/v1/auth/login` e autentica as demais rotas com `Authorization: Bearer <token>`. Para uso local, o segredo JWT padrao fica em `application.yml`; voce pode sobrescrever com `REMEDIAR_JWT_SECRET` se quiser testar outro valor.

@@ -3,10 +3,10 @@ package br.com.remediar.application.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import br.com.remediar.application.dto.MedicationCreateCommand;
 import br.com.remediar.common.BusinessException;
 import br.com.remediar.domain.enums.MedicationStatus;
 import br.com.remediar.domain.model.Medication;
-import br.com.remediar.web.dto.MedicationCreateRequest;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +28,7 @@ class MedicationServiceTest {
 
     @Test
     void shouldRejectMedicationWithLessThanFortyFiveDaysOfValidity() {
-        MedicationCreateRequest request = validRequest(1, "SHORT" + System.nanoTime(), LocalDate.now().plusDays(44));
+        MedicationCreateCommand request = validRequest(1, "SHORT" + System.nanoTime(), LocalDate.now().plusDays(44));
 
         assertThatThrownBy(() -> medicationService.create(request))
                 .isInstanceOf(BusinessException.class)
@@ -37,15 +37,15 @@ class MedicationServiceTest {
 
     @Test
     void shouldRejectBlacklistedMedicationType() {
-        MedicationCreateRequest request = validRequest(4, "CTRL" + System.nanoTime(), LocalDate.now().plusDays(90));
+        MedicationCreateCommand request = validRequest(4, "CTRL" + System.nanoTime(), LocalDate.now().plusDays(90));
 
         assertThatThrownBy(() -> medicationService.create(request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("Cadastro bloqueado");
     }
 
-    private MedicationCreateRequest validRequest(int medicationTypeCode, String lot, LocalDate expirationDate) {
-        return new MedicationCreateRequest(
+    private MedicationCreateCommand validRequest(int medicationTypeCode, String lot, LocalDate expirationDate) {
+        return new MedicationCreateCommand(
                 1L,
                 "11122233344",
                 "Dipirona",

@@ -2,12 +2,13 @@ package br.com.remediar.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import br.com.remediar.application.dto.DonationDeliveryConfirmationCommand;
+import br.com.remediar.application.dto.DonationMatchCreateCommand;
+import br.com.remediar.application.dto.MedicationCreateCommand;
 import br.com.remediar.domain.enums.DonationFlowStatus;
 import br.com.remediar.domain.enums.MedicationStatus;
 import br.com.remediar.domain.model.DonationMatch;
 import br.com.remediar.domain.model.Medication;
-import br.com.remediar.web.dto.DonationMatchCreateRequest;
-import br.com.remediar.web.dto.MedicationCreateRequest;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
@@ -25,7 +26,7 @@ class DonationMatchServiceTest {
 
     @Test
     void shouldCreateAcceptAndConfirmDonationMatch() {
-        Medication medication = medicationService.create(new MedicationCreateRequest(
+        Medication medication = medicationService.create(new MedicationCreateCommand(
                 1L,
                 "11122233344",
                 "Dipirona",
@@ -41,7 +42,7 @@ class DonationMatchServiceTest {
                 true
         ));
 
-        DonationMatch created = donationMatchService.create(new DonationMatchCreateRequest(
+        DonationMatch created = donationMatchService.create(new DonationMatchCreateCommand(
                 medication.getId(),
                 1L,
                 1L,
@@ -56,7 +57,10 @@ class DonationMatchServiceTest {
         assertThat(accepted.getValidationCode()).startsWith("RM-" + created.getId() + "-");
         assertThat(accepted.getMedication().getStatus()).isEqualTo(MedicationStatus.DONATION_IN_PROGRESS);
 
-        DonationMatch completed = donationMatchService.confirmDelivery(created.getId(), accepted.getValidationCode(), "12345678000199");
+        DonationMatch completed = donationMatchService.confirmDelivery(
+                created.getId(),
+                new DonationDeliveryConfirmationCommand(accepted.getValidationCode(), "12345678000199")
+        );
         assertThat(completed.getStatus()).isEqualTo(DonationFlowStatus.COMPLETED);
         assertThat(completed.getMedication().getStatus()).isEqualTo(MedicationStatus.DELIVERED);
     }
